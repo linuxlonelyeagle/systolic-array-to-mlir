@@ -7,7 +7,7 @@ object Converter {
     case Ref(loc, _, _, _, _) => map(loc)
     case Add(l, r) => visit(l, map) +& visit(r, map) 
     case Multiply(l, r) => visit(l, map) * visit(r, map)
-    case SMux(c, t, f) => Mux(visit(c, map).toBool(), visit(t, map), visit(f, map))
+    //case SMux(c, t, f) => Mux(visit(c, map)., visit(t, map), visit(f, map))
     case _ => throw new Exception("converter error")
   } 
 }

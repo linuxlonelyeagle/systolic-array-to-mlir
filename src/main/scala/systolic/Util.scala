@@ -8,14 +8,14 @@ object Util {
   def matmul(a: Seq[Seq[Double]], b: Seq[Seq[Double]]): Seq[Seq[Int]] = {
     (for (row <- a)
       yield for (col <- b.transpose) 
-        yield row zip col map Function.tupled(_ * _) sum) map(_ map (_.toInt))
+       yield (row zip col map {case (i, j) => i * j}).sum) map(_ map (_.toInt))
   }
   
   def matmul[A](a: Seq[Seq[A]], b: Seq[Seq[A]])(implicit n: Numeric[A]) = {
     import n._
     for (row <- a)
       yield for(col <- b.transpose)
-        yield row zip col map Function.tupled(_*_) sum
+        yield (row zip col map {case (i, j) => i * j}).sum
   }
 
   def matmul2[A: Numeric](a: Seq[Seq[A]], b: Seq[A]) = matmul(a, Seq(b).transpose).flatten
@@ -35,7 +35,7 @@ object Util {
   def det[A](m_ : Seq[Seq[A]])(implicit n: Numeric[A]) = {
     import n._
 
-    val m = m_.map(_.map(_.toInt()))
+    val m = m_.map(_.map(_.toInt))
 
     val summands =
       for {

@@ -42,7 +42,7 @@ class Systolic {
   
   class Local(val weidth: Int) {
     var input: IRef = null 
-    val calculation: Expr = null 
+    var calculation: Expr = null 
     var output: ORef = null 
 
     def apply(its: Iterator*): Ref = {
@@ -106,12 +106,52 @@ class Systolic {
     fixed_directions(local) = Seq(dir._1, dir._2)
   }
   
-  def getSpcaceTimeTransform: Seq[Seq[Seq[Int]]] = {
+ /*def getSpcaceTimeTransform: Seq[Seq[Seq[Int]]] = {
     // 把6个Seq展开传递进comb函数
     val possibilities = comb(Seq.fill(6)(Seq(-1, 0, 1)): _*)
     val dirs = fixed_directions.map{
-      case (local, xy_d) => dependencyvecs(local.calculation).collect{}
-      val it_d =  
+      case (local, xy_d) => dependencyvecs(local.calculation).collect{case (l, d) if l == local => d }.head
+      
     }
+  
+  }*/
+  def spcaceTimeTransform(matrix: Seq[Seq[Int]]) : Unit = {
+    val P = matrix.init
+    val s = Seq(matrix.last)
+    println(s"Det: ${det(matrix)}")
+    val domain = comb(bounds.map(t => t._1 to t._2).toSeq:_*) 
+    println(s"domain: ${domain}")
+    val domain_verts = comb(bounds.map(t => Seq(t._1, t._2)).toSeq:_*)
+    println(s"domain_verts: ${domain_verts}")
+    // domain_to_range 算出每一个迭代运行的时间点
+    val domain_to_range = domain.map(d => d -> matmul(matrix, Seq(d).transpose).flatten).toMap
+    println(s"domain_to_ range: ${domain_to_range}")
+    // proj_verts 让三维，降低到二维的空间，算出需要多少个pe 
+    val proj_verts = (for (v <- domain_verts) yield matmul(P, Seq(v).transpose).flatten).distinct
+    // 输出所有的pe 
+    println("The vertices of your systolic array are:")
+    proj_verts.foreach(v => println(s"\t${v}"))
+    val inputSeqs = ArrayBuffer.empty[Tuple4[Systolic#Input, Int, Seq[Int], Seq[Int]]]
+    // 这里算出输入矩阵每一个输入的位置，包括了元素在原来矩阵的位置，还有输入的时间，还有通过那一个pe进行输入
+    for (it_vec <- domain) {
+      val xyt = matmul(matrix, Seq(it_vec).transpose).flatten
+      var letter = 'a'
+      for (l <- locals.filter(_.input != null)) {
+        val l_it = it_vec.lazyZip(l.input.localRef.direction).lazyZip(l.input.localRef.fiexd).toList.map{ case(i, d, f) => if (f) d else i}
+        if (l_it == it_vec) {
+          // 这里算出的应该是输入矩阵在原矩阵中的位置
+          val in_coord = l.input.its.map(it => (l.input.localRef.its zip it_vec).collect{case(jt, i) if it == jt => i}).flatten
+          // println(s"\t\t$letter: $in_coord")
+          inputSeqs += ((l.input.input, xyt.last, xyt.init, in_coord))
+        }
+        letter = (letter.toInt + 1).asInstanceOf[Char]
+      }
+    }   
+    var letter = 'a'
+    for ( l <- locals.filter(_.input != null)) {
+      println(s"Your input pattern for ${letter} is:")
+    val input_seq = inputSeqs.filter(l.input.input == _._1).distinct.sortWith(_._2 < _._2)
+     
   }
+}
 }
