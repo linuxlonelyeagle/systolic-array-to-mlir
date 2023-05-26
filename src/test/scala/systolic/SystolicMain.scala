@@ -11,7 +11,7 @@ class MatMul extends Systolic {
 
   val A = Input(i, k)
   val B = Input(k, j)
-  val C = Input(i, j) 
+  val C = Output(i, j) 
 
   val a, b = Local(16)
   val c = Local(32) 
@@ -24,7 +24,7 @@ class MatMul extends Systolic {
   b(i, j, k) := b(i-1, j, k) 
   c(i, j, k) := c(i, j, k-1) + (a(i, j-1, k) * b(i-1, j, k))
 
-  c(i, j) := c(i, j, N3)
+  C(i, j) := c(i, j, N3)
   spcaceTimeTransform(Seq(
     Seq(1, 0, 0),
     Seq(0, 1, 0), 
@@ -32,5 +32,6 @@ class MatMul extends Systolic {
 }
 
 object  SystolicMain extends App {
-  val tmp = new MatMul
+  emitVerilog((new MatMul).mod)
+  circt.stage.ChiselStage.emitHWDialect((new MatMul).mod)
 }
